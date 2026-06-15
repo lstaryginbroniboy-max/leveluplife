@@ -1,6 +1,5 @@
-const CACHE = 'lul-v3';
-const ASSETS = [
-  './index.html',
+const CACHE = 'lul-v4';
+const STATIC = [
   'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
   'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
   'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js'
@@ -8,7 +7,7 @@ const ASSETS = [
 
 self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open(CACHE).then(c => c.addAll(ASSETS).catch(() => {}))
+    caches.open(CACHE).then(c => c.addAll(STATIC).catch(() => {}))
   );
   self.skipWaiting();
 });
@@ -25,18 +24,28 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
   const url = e.request.url;
-  // Don't cache weather/map API calls
-  if (url.includes('wttr.in') || url.includes('nominatim') || url.includes('tile.openstreetmap')) return;
+
+  // Never cache: weather, map APIs, tile images
+  if (url.includes('wttr.in') || url.includes('nominatim') || url.includes('openstreetmap')) return;
+
+  // index.html — always network first (always fresh)
+  if (url.endsWith('/') || url.includes('index.html') || url.endsWith('leveluplife/')) {
+    e.respondWith(
+      fetch(e.request).then(res => res).catch(() => caches.match('./index.html'))
+    );
+    return;
+  }
+
+  // Static libs — cache first
   e.respondWith(
     caches.match(e.request).then(cached => {
       if (cached) return cached;
       return fetch(e.request).then(res => {
         if (res && res.status === 200) {
-          const clone = res.clone();
-          caches.open(CACHE).then(c => c.put(e.request, clone));
+          caches.open(CACHE).then(c => c.put(e.request, res.clone()));
         }
         return res;
-      }).catch(() => caches.match('./index.html'));
+      });
     })
   );
 });
