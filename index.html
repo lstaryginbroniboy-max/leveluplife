@@ -117,22 +117,46 @@ select option { background: var(--bg3); }
   background: var(--bg2); border-bottom: 1px solid var(--border);
   padding: 0 16px; display: flex; align-items: center;
   justify-content: space-between; height: 60px; position: sticky; top: 0; z-index: 100;
-  flex-wrap: wrap; gap: 4px;
 }
 #nav .logo {
   font-weight: 800; font-size: 1.1rem;
   background: linear-gradient(135deg, #a78bfa, #f59e0b);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
 }
-#nav .nav-links { display: flex; gap: 2px; flex-wrap: wrap; }
+#nav .nav-links { display: flex; gap: 2px; }
 #nav .nav-links button {
   background: none; border: none; color: var(--text2);
   padding: 7px 12px; border-radius: 8px; cursor: pointer; font-size: 0.85rem; transition: all 0.2s;
 }
 #nav .nav-links button:hover, #nav .nav-links button.active { background: var(--bg3); color: var(--text); }
-#nav .user-info { display: flex; align-items: center; gap: 8px; font-size: 0.82rem; color: var(--text2); flex-wrap: wrap; }
+#nav .user-info { display: flex; align-items: center; gap: 8px; font-size: 0.82rem; color: var(--text2); }
 .xp-badge { background: var(--bg3); border: 1px solid var(--border); border-radius: 20px; padding: 4px 10px; font-size: 0.78rem; color: var(--gold); }
 .streak-badge { color: var(--gold); font-size: 0.82rem; }
+
+/* ── Mobile bottom nav ── */
+#bottom-nav {
+  display: none;
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
+  background: var(--bg2); border-top: 1px solid var(--border);
+  height: 60px; padding: 0;
+}
+#bottom-nav button {
+  flex: 1; background: none; border: none; color: var(--text2);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 2px; cursor: pointer; font-size: 0.6rem; padding: 6px 2px;
+  transition: color 0.2s;
+}
+#bottom-nav button .bn-icon { font-size: 1.3rem; line-height: 1; }
+#bottom-nav button.active, #bottom-nav button:hover { color: var(--accent); }
+#bottom-nav button.active .bn-icon { filter: drop-shadow(0 0 4px var(--accent)); }
+
+@media (max-width: 640px) {
+  #nav .nav-links { display: none; }
+  #nav .user-info { gap: 6px; }
+  #nav #nav-username { display: none; }
+  #bottom-nav { display: flex; }
+  #app-content { padding-bottom: 72px !important; }
+}
 
 #app-content { padding: 20px 16px; max-width: 1000px; margin: 0 auto; }
 
@@ -349,6 +373,25 @@ select option { background: var(--bg3); }
       <button class="btn btn-outline btn-sm" onclick="doLogout()">Выйти</button>
     </div>
   </nav>
+
+  <!-- Mobile bottom navigation -->
+  <div id="bottom-nav">
+    <button onclick="showScreen('dashboard')" id="bn-dashboard">
+      <span class="bn-icon">🏠</span>Главная
+    </button>
+    <button onclick="showScreen('daily')" id="bn-daily">
+      <span class="bn-icon">📅</span>Сегодня
+    </button>
+    <button onclick="showScreen('workouts')" id="bn-workouts">
+      <span class="bn-icon">🏋️</span>Тренировки
+    </button>
+    <button onclick="showScreen('stats')" id="bn-stats">
+      <span class="bn-icon">📊</span>Статистика
+    </button>
+    <button onclick="doLogout()" id="bn-logout">
+      <span class="bn-icon">🚪</span>Выйти
+    </button>
+  </div>
 
   <div id="app-content">
 
@@ -742,6 +785,9 @@ function showScreen(name) {
   document.querySelectorAll('#nav .nav-links button').forEach(b => b.classList.remove('active'));
   const nb = document.getElementById('nav-' + name);
   if (nb) nb.classList.add('active');
+  document.querySelectorAll('#bottom-nav button').forEach(b => b.classList.remove('active'));
+  const bnb = document.getElementById('bn-' + name);
+  if (bnb) bnb.classList.add('active');
   const user = getCurrentUser(); if (!user) return;
   if (name === 'dashboard') renderDashboard(user);
   if (name === 'daily') renderDaily(user);
