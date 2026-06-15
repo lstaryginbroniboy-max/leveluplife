@@ -1174,9 +1174,9 @@ function updateWeatherEl(w) {
 function startDashClock(city) {
   if (_clockTimer) clearInterval(_clockTimer);
   function tick() {
-    const now = new Date(new Date().getTime()+3*60*60*1000);
-    const timeStr = now.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-    const dateStr = now.toLocaleDateString('ru-RU',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit',second:'2-digit',timeZone:'Europe/Moscow'});
+    const dateStr = now.toLocaleDateString('ru-RU',{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:'Europe/Moscow'});
     const el = document.getElementById('dash-clock');
     const de = document.getElementById('dash-msk-date');
     if (el) el.textContent = timeStr+' МСК';
