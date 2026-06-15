@@ -376,25 +376,6 @@ select option { background: var(--bg3); }
     </div>
   </nav>
 
-  <!-- Mobile bottom navigation -->
-  <div id="bottom-nav">
-    <button onclick="showScreen('dashboard')" id="bn-dashboard">
-      <span class="bn-icon">🏠</span>Главная
-    </button>
-    <button onclick="showScreen('daily')" id="bn-daily">
-      <span class="bn-icon">📅</span>Сегодня
-    </button>
-    <button onclick="showScreen('workouts')" id="bn-workouts">
-      <span class="bn-icon">🏋️</span>Тренировки
-    </button>
-    <button onclick="showScreen('stats')" id="bn-stats">
-      <span class="bn-icon">📊</span>Статистика
-    </button>
-    <button onclick="doLogout()" id="bn-logout">
-      <span class="bn-icon">🚪</span>Выйти
-    </button>
-  </div>
-
   <div id="app-content">
 
     <!-- ── DASHBOARD ── -->
@@ -2015,5 +1996,24 @@ if ('serviceWorker' in navigator) {
   });
 }
 </script>
+
+<!-- Mobile bottom navigation — at body root so position:fixed works correctly -->
+<div id="bottom-nav">
+  <button onclick="showScreen('dashboard')" id="bn-dashboard">
+    <span class="bn-icon">🏠</span>Главная
+  </button>
+  <button onclick="showScreen('daily')" id="bn-daily">
+    <span class="bn-icon">📅</span>Сегодня
+  </button>
+  <button onclick="showScreen('workouts')" id="bn-workouts">
+    <span class="bn-icon">🏋️</span>Тренировки
+  </button>
+  <button onclick="showScreen('stats')" id="bn-stats">
+    <span class="bn-icon">📊</span>Статистика
+  </button>
+  <button onclick="doLogout()" id="bn-logout">
+    <span class="bn-icon">🚪</span>Выйти
+  </button>
+</div>
 </body>
 </html>
