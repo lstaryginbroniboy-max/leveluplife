@@ -116,7 +116,7 @@ select option { background: var(--bg3); }
 #nav {
   background: var(--bg2); border-bottom: 1px solid var(--border);
   padding: 0 16px; display: flex; align-items: center;
-  justify-content: space-between; height: 60px; position: sticky; top: 0; z-index: 100;
+  justify-content: space-between; height: 56px; position: fixed; top: 0; left: 0; right: 0; z-index: 300;
 }
 #nav .logo {
   font-weight: 800; font-size: 1.1rem;
@@ -133,29 +133,31 @@ select option { background: var(--bg3); }
 .xp-badge { background: var(--bg3); border: 1px solid var(--border); border-radius: 20px; padding: 4px 10px; font-size: 0.78rem; color: var(--gold); }
 .streak-badge { color: var(--gold); font-size: 0.82rem; }
 
+/* Offset content below fixed nav */
+#app-content { margin-top: 56px; }
+
 /* ── Mobile bottom nav ── */
 #bottom-nav {
   display: none;
-  position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 300;
   background: var(--bg2); border-top: 1px solid var(--border);
-  height: 60px; padding: 0;
+  height: 62px; padding: 0; padding-bottom: env(safe-area-inset-bottom);
 }
 #bottom-nav button {
   flex: 1; background: none; border: none; color: var(--text2);
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 2px; cursor: pointer; font-size: 0.6rem; padding: 6px 2px;
+  gap: 2px; cursor: pointer; font-size: 0.62rem; padding: 6px 2px;
   transition: color 0.2s;
 }
-#bottom-nav button .bn-icon { font-size: 1.3rem; line-height: 1; }
+#bottom-nav button .bn-icon { font-size: 1.35rem; line-height: 1; }
 #bottom-nav button.active, #bottom-nav button:hover { color: var(--accent); }
 #bottom-nav button.active .bn-icon { filter: drop-shadow(0 0 4px var(--accent)); }
 
 @media (max-width: 768px) {
   #nav .nav-links { display: none; }
-  #nav .user-info { gap: 6px; }
   #nav #nav-username { display: none; }
   #bottom-nav { display: flex; }
-  #app-content { padding-bottom: 72px !important; }
+  #app-content { padding-bottom: 74px !important; }
 }
 
 #app-content { padding: 20px 16px; max-width: 1000px; margin: 0 auto; }
