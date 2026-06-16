@@ -764,6 +764,7 @@ function showApp(user) {
 }
 
 function showScreen(name) {
+  window.scrollTo({top:0, behavior:'instant'});
   document.querySelectorAll('#app-content .screen').forEach(s => s.classList.remove('active'));
   const el = document.getElementById('screen-' + name);
   if (el) el.classList.add('active');
@@ -2001,7 +2002,9 @@ initApp();
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').catch(() => {});
+    navigator.serviceWorker.register('./sw.js', {updateViaCache: 'none'})
+      .then(reg => reg.update())
+      .catch(() => {});
   });
 }
 </script>

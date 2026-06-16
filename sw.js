@@ -1,4 +1,4 @@
-const CACHE = 'lul-v4';
+const CACHE = 'lul-v5';
 const STATIC = [
   'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
   'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
