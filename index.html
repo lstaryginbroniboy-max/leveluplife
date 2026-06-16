@@ -404,10 +404,7 @@ select option { background: var(--bg3); }
             <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;flex-wrap:wrap">
               <h3 style="margin:0;flex-shrink:0">Сегодня</h3>
               <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;min-width:0">
-                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end">
-                  <span id="dash-weather" style="font-size:1.1rem;font-weight:700;color:var(--text);letter-spacing:0.5px;white-space:nowrap"></span>
-                  <span id="dash-clock" style="font-family:monospace;font-size:0.9rem;color:var(--gold);font-weight:700;white-space:nowrap"></span>
-                </div>
+                <span id="dash-clock" style="font-family:monospace;font-size:0.9rem;color:var(--gold);font-weight:700;white-space:nowrap"></span>
                 <span id="dash-msk-date" class="text-sm text-muted" style="text-align:right"></span>
               </div>
             </div>
@@ -1188,12 +1185,7 @@ function startDashClock(city) {
   tick();
   _clockTimer = setInterval(tick, 1000);
 
-  const wEl = document.getElementById('dash-weather');
-  if (!city) {
-    if (wEl) wEl.textContent = '';
-    return;
-  }
-  if (wEl) wEl.textContent = '…';
+  if (!city) return;
   fetchWeather(city).then(updateWeatherEl);
 }
 
@@ -1202,10 +1194,14 @@ function renderDashCity(user) {
   if (!el) return;
   const city = user.city || '';
   el.innerHTML = city
-    ? `📍 <span style="color:var(--text1)">${city}</span>
-       <button onclick="showCityEdit()" style="background:none;border:none;cursor:pointer;color:var(--text2);font-size:0.8rem;padding:0 4px" title="Ввести вручную">✏️</button>
-       <button onclick="showCityMap()" style="background:none;border:none;cursor:pointer;font-size:0.85rem;padding:0 2px" title="Выбрать на карте">🗺️</button>`
+    ? `<div style="display:flex;align-items:center;gap:6px;justify-content:center;flex-wrap:wrap">
+         <span>📍 <span style="color:var(--text)">${city}</span></span>
+         <span id="dash-weather" style="font-weight:700;color:var(--text);white-space:nowrap"></span>
+         <button onclick="showCityEdit()" style="background:none;border:none;cursor:pointer;color:var(--text2);font-size:0.8rem;padding:0" title="Изменить город">✏️</button>
+         <button onclick="showCityMap()" style="background:none;border:none;cursor:pointer;font-size:0.85rem;padding:0" title="Выбрать на карте">🗺️</button>
+       </div>`
     : `<div style="display:flex;gap:8px;justify-content:center">
+         <span id="dash-weather" style="display:none"></span>
          <button onclick="showCityEdit()" style="background:none;border:none;cursor:pointer;color:var(--accent);font-size:0.82rem;padding:0">✏️ Ввести город</button>
          <button onclick="showCityMap()" style="background:none;border:none;cursor:pointer;color:var(--accent);font-size:0.82rem;padding:0">🗺️ Выбрать на карте</button>
        </div>`;
