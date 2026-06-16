@@ -1114,7 +1114,6 @@ let _wCache = {city:'', emoji:'', curTemp:'', maxTemp:'', ts:0};
 let _clockTimer = null;
 
 function omWeatherEmoji(code) {
-  // Open-Meteo WMO codes
   if (code===0) return '☀️';
   if (code<=2) return '⛅';
   if (code===3) return '☁️';
@@ -1123,38 +1122,56 @@ function omWeatherEmoji(code) {
   if (code<=69) return '🌧️';
   if (code<=79) return '❄️';
   if (code<=84) return '🌦️';
-  if (code<=94) return '⛈️';
   return '⛈️';
+}
+
+async function tryOpenMeteo(city) {
+  const ctrl1 = new AbortController();
+  const t1 = setTimeout(()=>ctrl1.abort(), 8000);
+  const gr = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=ru&format=json`, {signal:ctrl1.signal});
+  clearTimeout(t1);
+  const gd = await gr.json();
+  if (!gd.results?.length) throw new Error('city not found');
+  const {latitude:lat, longitude:lon} = gd.results[0];
+  const ctrl2 = new AbortController();
+  const t2 = setTimeout(()=>ctrl2.abort(), 8000);
+  const wr = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code&daily=temperature_2m_max&timezone=Europe%2FMoscow&forecast_days=1`, {signal:ctrl2.signal});
+  clearTimeout(t2);
+  const wd = await wr.json();
+  return {
+    emoji: omWeatherEmoji(wd.current.weather_code),
+    curTemp: String(Math.round(wd.current.temperature_2m)),
+    maxTemp: String(Math.round(wd.daily.temperature_2m_max[0]))
+  };
+}
+
+async function tryWttr(city) {
+  const ctrl = new AbortController();
+  const t = setTimeout(()=>ctrl.abort(), 8000);
+  const r = await fetch(`https://wttr.in/${encodeURIComponent(city)}?format=%t+%h`, {signal:ctrl, cache:'no-store'});
+  clearTimeout(t);
+  const text = (await r.text()).trim(); // e.g. "+13°C 72%"
+  const m = text.match(/([+-]?\d+)/);
+  if (!m) throw new Error('bad format');
+  return {emoji:'🌡️', curTemp: m[1], maxTemp: m[1]};
 }
 
 async function fetchWeather(city) {
   const now = Date.now();
-  if (_wCache.city===city && now-_wCache.ts < 30*60*1000 && _wCache.emoji && _wCache.curTemp!=='—') return _wCache;
+  if (_wCache.city===city && now-_wCache.ts < 30*60*1000 && _wCache.curTemp && _wCache.curTemp!=='—') return _wCache;
+  const el = document.getElementById('dash-weather');
+  if (el) el.textContent = '⏳';
   try {
-    // Step 1: geocode city name → lat/lon
-    const ctrl1 = new AbortController();
-    const t1 = setTimeout(()=>ctrl1.abort(), 6000);
-    const gr = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=ru&format=json`, {signal:ctrl1.signal});
-    clearTimeout(t1);
-    if (!gr.ok) throw new Error('geo fail');
-    const gd = await gr.json();
-    if (!gd.results?.length) throw new Error('city not found');
-    const {latitude:lat, longitude:lon} = gd.results[0];
-
-    // Step 2: fetch weather
-    const ctrl2 = new AbortController();
-    const t2 = setTimeout(()=>ctrl2.abort(), 6000);
-    const wr = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code&daily=temperature_2m_max&timezone=Europe%2FMoscow&forecast_days=1`, {signal:ctrl2.signal});
-    clearTimeout(t2);
-    if (!wr.ok) throw new Error('weather fail');
-    const wd = await wr.json();
-    const curTemp = Math.round(wd.current.temperature_2m);
-    const maxTemp = Math.round(wd.daily.temperature_2m_max[0]);
-    const emoji = omWeatherEmoji(wd.current.weather_code);
-    _wCache = {city, emoji, curTemp: String(curTemp), maxTemp: String(maxTemp), ts: now};
-  } catch(e) {
-    _wCache = {city, emoji:'🌡️', curTemp:'—', maxTemp:'—', ts: now - 29*60*1000};
-    setTimeout(()=>{ if(document.getElementById('dash-weather')) fetchWeather(city).then(updateWeatherEl); }, 15000);
+    const w = await tryOpenMeteo(city);
+    _wCache = {city, ...w, ts: now};
+  } catch(e1) {
+    try {
+      const w = await tryWttr(city);
+      _wCache = {city, ...w, ts: now};
+    } catch(e2) {
+      _wCache = {city, emoji:'', curTemp:'—', maxTemp:'—', ts: now - 25*60*1000};
+      setTimeout(()=>fetchWeather(city).then(updateWeatherEl), 20000);
+    }
   }
   return _wCache;
 }
@@ -1193,10 +1210,13 @@ function renderDashCity(user) {
   const el = document.getElementById('dash-city');
   if (!el) return;
   const city = user.city || '';
+  const now = Date.now();
+  const cachedW = (_wCache.city===city && now-_wCache.ts < 30*60*1000 && _wCache.curTemp && _wCache.curTemp!=='—')
+    ? `${_wCache.emoji} ${_wCache.curTemp}°C (${_wCache.maxTemp}°C)` : '⏳';
   el.innerHTML = city
     ? `<div style="display:flex;align-items:center;gap:6px;justify-content:center;flex-wrap:wrap">
          <span>📍 <span style="color:var(--text)">${city}</span></span>
-         <span id="dash-weather" style="font-weight:700;color:var(--text);white-space:nowrap"></span>
+         <span id="dash-weather" style="font-weight:700;color:var(--text);white-space:nowrap">${cachedW}</span>
          <button onclick="showCityEdit()" style="background:none;border:none;cursor:pointer;color:var(--text2);font-size:0.8rem;padding:0" title="Изменить город">✏️</button>
          <button onclick="showCityMap()" style="background:none;border:none;cursor:pointer;font-size:0.85rem;padding:0" title="Выбрать на карте">🗺️</button>
        </div>`
