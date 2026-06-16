@@ -1,4 +1,4 @@
-const CACHE = 'lul-v5';
+const CACHE = 'lul-v6';
 const STATIC = [
   'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
   'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
@@ -28,10 +28,10 @@ self.addEventListener('fetch', e => {
   // Never cache: weather, map APIs, tile images
   if (url.includes('wttr.in') || url.includes('nominatim') || url.includes('openstreetmap')) return;
 
-  // index.html — always network first (always fresh)
+  // index.html — always network, never cache
   if (url.endsWith('/') || url.includes('index.html') || url.endsWith('leveluplife/')) {
     e.respondWith(
-      fetch(e.request).then(res => res).catch(() => caches.match('./index.html'))
+      fetch(e.request, {cache: 'no-store'}).then(res => res).catch(() => caches.match('./index.html'))
     );
     return;
   }
