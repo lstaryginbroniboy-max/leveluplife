@@ -146,10 +146,11 @@ select option { background: var(--bg3); }
 #bottom-nav button {
   flex: 1; background: none; border: none; color: var(--text2);
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 2px; cursor: pointer; font-size: 0.62rem; padding: 6px 2px;
-  transition: color 0.2s;
+  gap: 2px; cursor: pointer; font-size: 0.62rem; padding: 8px 2px 4px;
+  transition: color 0.2s; touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+  min-height: 56px;
 }
-#bottom-nav button .bn-icon { font-size: 1.35rem; line-height: 1; }
+#bottom-nav button .bn-icon { font-size: 1.4rem; line-height: 1; }
 #bottom-nav button.active, #bottom-nav button:hover { color: var(--accent); }
 #bottom-nav button.active .bn-icon { filter: drop-shadow(0 0 4px var(--accent)); }
 
@@ -157,7 +158,7 @@ select option { background: var(--bg3); }
   #nav .nav-links { display: none; }
   #nav #nav-username { display: none; }
   #bottom-nav { display: flex; }
-  #app-content { padding-bottom: 74px !important; }
+  #app-content { padding-bottom: 80px !important; }
 }
 
 #app-content { padding: 20px 16px; max-width: 1000px; margin: 0 auto; }
@@ -2037,21 +2038,28 @@ if ('serviceWorker' in navigator) {
 
 <!-- Mobile bottom navigation — at body root so position:fixed works correctly -->
 <div id="bottom-nav">
-  <button onclick="showScreen('dashboard')" id="bn-dashboard">
-    <span class="bn-icon">🏠</span>Главная
-  </button>
-  <button onclick="showScreen('daily')" id="bn-daily">
-    <span class="bn-icon">📅</span>Сегодня
-  </button>
-  <button onclick="showScreen('workouts')" id="bn-workouts">
-    <span class="bn-icon">🏋️</span>Тренировки
-  </button>
-  <button onclick="showScreen('stats')" id="bn-stats">
-    <span class="bn-icon">📊</span>Статистика
-  </button>
-  <button onclick="doLogout()" id="bn-logout">
-    <span class="bn-icon">🚪</span>Выйти
-  </button>
+  <button id="bn-dashboard"><span class="bn-icon">🏠</span>Главная</button>
+  <button id="bn-daily"><span class="bn-icon">📅</span>Сегодня</button>
+  <button id="bn-workouts"><span class="bn-icon">🏋️</span>Тренировки</button>
+  <button id="bn-stats"><span class="bn-icon">📊</span>Статистика</button>
+  <button id="bn-logout"><span class="bn-icon">🚪</span>Выйти</button>
 </div>
+<script>
+(function(){
+  var map = {
+    'bn-dashboard': function(){ showScreen('dashboard'); },
+    'bn-daily':     function(){ showScreen('daily'); },
+    'bn-workouts':  function(){ showScreen('workouts'); },
+    'bn-stats':     function(){ showScreen('stats'); },
+    'bn-logout':    function(){ doLogout(); }
+  };
+  Object.keys(map).forEach(function(id){
+    var btn = document.getElementById(id);
+    if (!btn) return;
+    btn.addEventListener('touchend', function(e){ e.preventDefault(); map[id](); }, {passive:false});
+    btn.addEventListener('click', function(){ map[id](); });
+  });
+})();
+</script>
 </body>
 </html>
