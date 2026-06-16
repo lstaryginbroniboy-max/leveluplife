@@ -1149,12 +1149,14 @@ async function tryOpenMeteo(city) {
 async function tryWttr(city) {
   const ctrl = new AbortController();
   const t = setTimeout(()=>ctrl.abort(), 8000);
-  const r = await fetch(`https://wttr.in/${encodeURIComponent(city)}?format=%t+%h`, {signal:ctrl, cache:'no-store'});
+  const r = await fetch(`https://wttr.in/${encodeURIComponent(city)}?format=j1`, {signal:ctrl.signal, cache:'no-store'});
   clearTimeout(t);
-  const text = (await r.text()).trim(); // e.g. "+13°C 72%"
-  const m = text.match(/([+-]?\d+)/);
-  if (!m) throw new Error('bad format');
-  return {emoji:'🌡️', curTemp: m[1], maxTemp: m[1]};
+  if (!r.ok) throw new Error('wttr fail');
+  const d = await r.json();
+  const cond = d.current_condition[0];
+  const curTemp = cond.temp_C;
+  const maxTemp = d.weather?.[0]?.maxtempC ?? curTemp;
+  return {emoji:'🌡️', curTemp: String(curTemp), maxTemp: String(maxTemp)};
 }
 
 async function fetchWeather(city) {
