@@ -401,12 +401,14 @@ select option { background: var(--bg3); }
         <div>
           <div id="dash-penalty-alert"></div>
           <div class="card" style="margin-bottom:14px">
-            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px">
-              <h3 style="margin:0">Сегодня</h3>
-              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-                <span id="dash-weather" style="font-size:1.15rem;letter-spacing:1px"></span>
-                <span id="dash-msk-date" class="text-sm text-muted"></span>
-                <span id="dash-clock" style="font-family:monospace;font-size:0.9rem;color:var(--gold);font-weight:700;min-width:60px"></span>
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;flex-wrap:wrap">
+              <h3 style="margin:0;flex-shrink:0">Сегодня</h3>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;min-width:0">
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end">
+                  <span id="dash-weather" style="font-size:1.1rem;font-weight:700;color:var(--text);letter-spacing:0.5px;white-space:nowrap"></span>
+                  <span id="dash-clock" style="font-family:monospace;font-size:0.9rem;color:var(--gold);font-weight:700;white-space:nowrap"></span>
+                </div>
+                <span id="dash-msk-date" class="text-sm text-muted" style="text-align:right"></span>
               </div>
             </div>
             <div id="dash-today"></div>
@@ -1129,17 +1131,22 @@ function weatherEmoji(code) {
 
 async function fetchWeather(city) {
   const now = Date.now();
-  if (_wCache.city===city && now-_wCache.ts < 30*60*1000 && _wCache.emoji) return _wCache;
+  if (_wCache.city===city && now-_wCache.ts < 30*60*1000 && _wCache.emoji && _wCache.curTemp!=='—') return _wCache;
   try {
-    const r = await fetch(`https://wttr.in/${encodeURIComponent(city)}?format=j1&lang=ru`, {cache:'no-store'});
+    const ctrl = new AbortController();
+    const tid = setTimeout(()=>ctrl.abort(), 8000);
+    const r = await fetch(`https://wttr.in/${encodeURIComponent(city)}?format=j1`, {cache:'no-store', signal:ctrl.signal});
+    clearTimeout(tid);
     if (!r.ok) throw new Error('bad response');
     const d = await r.json();
     const cond = d.current_condition[0];
     const curTemp = cond.temp_C;
     const maxTemp = d.weather?.[0]?.maxtempC ?? curTemp;
-    _wCache = {city, emoji:weatherEmoji(cond.weatherCode), curTemp, maxTemp, ts:now};
+    _wCache = {city, emoji:weatherEmoji(+cond.weatherCode), curTemp, maxTemp, ts:now};
   } catch(e) {
-    _wCache = {city, emoji:'🌡️', curTemp:'—', maxTemp:'—', ts:now};
+    // retry after 10s on failure
+    _wCache = {city, emoji:'', curTemp:'—', maxTemp:'—', ts: now - 29*60*1000};
+    setTimeout(()=>{ if(document.getElementById('dash-weather')) fetchWeather(city).then(updateWeatherEl); }, 10000);
   }
   return _wCache;
 }
@@ -1147,10 +1154,12 @@ async function fetchWeather(city) {
 function updateWeatherEl(w) {
   const el = document.getElementById('dash-weather');
   if (!el) return;
-  if (w.emoji) {
-    const cur = w.curTemp !== '—' ? w.curTemp+'°C' : '—';
-    const max = w.maxTemp !== '—' ? w.maxTemp+'°C' : '—';
+  if (w.curTemp && w.curTemp !== '—') {
+    const cur = w.curTemp+'°C';
+    const max = w.maxTemp+'°C';
     el.textContent = `${w.emoji} ${cur} (${max})`;
+  } else if (w.emoji) {
+    el.textContent = w.emoji;
   }
 }
 
